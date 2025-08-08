@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo Interactivo Final - Completo</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #FFFFFF;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    body.modal-abierto { overflow: hidden; }
+
+    .navegacion-botones { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 3rem; }
+    .btn-categoria { padding: 12px 25px; border: none; border-radius: 50px; font-size: 0.9rem; font-weight: 600; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .btn-categoria:hover { transform: translateY(-2px); }
+    .btn-categoria:nth-of-type(1) { background-color: #17334B; }
+    .btn-categoria:nth-of-type(2) { background-color: #54BBAB; }
+    .btn-categoria:nth-of-type(3) { background-color: #F39325; }
+    .btn-categoria:nth-of-type(4) { background-color: #B01829; }
+    
+    .btn-categoria.active {
+      transform: scale(1.1);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+    
+    .vista { display: none; animation: fundidoEntrada 0.5s ease-out; }
+    .vista.activa { display: block; }
+    @keyframes fundidoEntrada {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .navegacion-subcategorias { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 2rem; }
+    .fila-de-botones { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+    .btn-subcategoria { padding: 8px 18px; border: 2px solid #ccc; border-radius: 20px; background-color: transparent; color: #555; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .btn-subcategoria:hover { background-color: #ddd; border-color: #bbb; }
+    .btn-subcategoria.active { background-color: #F39325; color: #fff; border-color: #F39325; }
+
+    .titulo-principal, .titulo-subcategoria { text-align: center; font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 2rem; color: #222; }
+    
+    .estanteria { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; padding: 20px; }
+
+    .item-catalogo {
+      background-color: #fff; border: 1px solid #e0e0e0; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+      text-align: center; cursor: pointer; opacity: 0; transform: translateY(20px);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    .item-catalogo.saliendo { opacity: 0; transform: translateY(-20px); transition-duration: 0.2s; }
+    .item-catalogo.visible { opacity: 1; transform: translateY(0); }
+    .item-catalogo.oculto { display: none; }
+    .item-portada { width: 100%; height: auto; object-fit: cover; border-radius: 12px 12px 0 0; }
+    .item-info { padding: 20px; }
+    .item-info h3 { margin: 0; font-size: 1.1rem; color: #333; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 1000; padding: 20px; }
+    .modal-overlay.activo { opacity: 1; visibility: visible; }
+    .modal-contenido { background: #fff; border-radius: 15px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; transform: scale(0.9); transition: transform 0.3s ease; display: flex; flex-direction: column; align-items: center; }
+    .modal-overlay.activo .modal-contenido { transform: scale(1); }
+    .modal-contenido img { width: 100%; height: auto; border-radius: 15px 15px 0 0; }
+    .modal-texto { padding: 30px; text-align: center; }
+    .modal-texto h2 { margin-top: 0; margin-bottom: 15px; color: #333; }
+    .modal-texto p { margin: 0 0 25px 0; color: #555; line-height: 1.6; }
+    
+    .btn-modal {
+        display: inline-block;
+        background-color: #17334B;
+        color: #fff;
+        padding: 12px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-modal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .modal-cerrar { position: absolute; top: 15px; right: 15px; font-size: 2rem; color: #fff; mix-blend-mode: difference; cursor: pointer; line-height: 1; }
+  </style>
+</head>
+<body>
+<iframe 
+  src="https://heyzine.com/flip-book/9bebfd12d0.html" 
+  width="100%" 
+  height="800" 
+  frameborder="0" 
+  allowfullscreen>
+</iframe>
+  <nav class="navegacion-botones">
+    <button type="button" class="btn-categoria active" data-vista="libros" data-categoria-inicial="saberlab">LIBROS SABERLAB</button>
+    <button type="button" class="btn-categoria" data-vista="libros" data-categoria-inicial="saber-para-todos">LIBROS SABER PARA TODOS</button>
+    <button type="button" class="btn-categoria" data-vista="evaluaciones" data-categoria-inicial="periodicas">EVALUACIONES PERIODICAS</button>
+    <button type="button" class="btn-categoria" data-vista="evaluaciones" data-categoria-inicial="saber">EVALUACIONES SABER</button>
+  </nav>
+
+  <div id="vista-libros" class="vista activa">
+    <h2 class="titulo-principal">LIBROS SABERLAB</h2>
+    <section id="estanteria-libros" class="estanteria">
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Herramienta de aprendizaje para Grado 1, enfocada en el desarrollo de competencias clave desde el inicio."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-01.jpg" alt="Saber Lab 1"><div class="item-info"><h3>Saber Lab 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Material de estudio para Grado 2, diseñado para afianzar el pensamiento crítico y las habilidades lógicas."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-02.jpg" alt="Saber Lab 2"><div class="item-info"><h3>Saber Lab 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Libro de competencias para Grado 3. Incluye ejercicios prácticos y material de apoyo digital interactivo."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-03.jpg" alt="Saber Lab 3"><div class="item-info"><h3>Saber Lab 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Contenido avanzado para Grado 4 que potencia las habilidades en ciencias, matemáticas y lenguaje."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-04.jpg" alt="Saber Lab 4"><div class="item-info"><h3>Saber Lab 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Desarrolla las competencias del siglo XXI con este material integral para estudiantes de Grado 5."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-05.jpg" alt="Saber Lab 5"><div class="item-info"><h3>Saber Lab 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Preparación exhaustiva para Grado 6, cubriendo todas las áreas evaluadas en las pruebas estandarizadas."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-06.jpg" alt="Saber Lab 6"><div class="item-info"><h3>Saber Lab 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Material didáctico para Grado 7 que profundiza en el razonamiento y la resolución de problemas complejos."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-07.jpg" alt="Saber Lab 7"><div class="item-info"><h3>Saber Lab 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Enfocado en el Grado 8, este libro consolida conocimientos y prepara para los retos académicos superiores."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-08.jpg" alt="Saber Lab 8"><div class="item-info"><h3>Saber Lab 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Herramienta esencial para Grado 9, con un fuerte énfasis en lectura crítica y competencias científicas."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-09.jpg" alt="Saber Lab 9"><div class="item-info"><h3>Saber Lab 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Libro de preparación para Grado 10, diseñado para alcanzar la excelencia en las pruebas de estado."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-10.jpg" alt="Saber Lab 10"><div class="item-info"><h3>Saber Lab 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="saberlab" data-descripcion="Preparación final para Grado 11, consolidando todas las habilidades para las pruebas y la educación superior."><img class="item-portada" src="https://raw.githubusercontent.com/Soportegec/repositorio-imagenes/refs/heads/Carrusel/saberlab-11.jpg" alt="Saber Lab 11"><div class="item-info"><h3>Saber Lab 11</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Construye las bases del conocimiento con este material integral para Primer Grado."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-1.png?raw=true" alt="Saber Para Todos 1"><div class="item-info"><h3>Saber Para Todos 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Material de apoyo para Segundo Grado que refuerza el aprendizaje de manera lúdica y efectiva."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-2.png?raw=true" alt="Saber Para Todos 2"><div class="item-info"><h3>Saber Para Todos 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Fomenta la curiosidad y el conocimiento en Tercer Grado con actividades y contenidos adaptados."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-3.png?raw=true" alt="Saber Para Todos 3"><div class="item-info"><h3>Saber Para Todos 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Libro de competencias para Cuarto Grado, diseñado para construir un aprendizaje sólido y duradero."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-4.png?raw=true" alt="Saber Para Todos 4"><div class="item-info"><h3>Saber Para Todos 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Herramienta de estudio para Quinto Grado que integra todas las áreas del conocimiento de forma amena."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-5.png?raw=true" alt="Saber Para Todos 5"><div class="item-info"><h3>Saber Para Todos 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Contenido completo para Sexto Grado, enfocado en la construcción de competencias transversales."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-6.png?raw=true" alt="Saber Para Todos 6"><div class="item-info"><h3>Saber Para Todos 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Desarrolla tus habilidades en Séptimo Grado con este material que promueve el aprendizaje autónomo."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-7.png?raw=true" alt="Saber Para Todos 7"><div class="item-info"><h3>Saber Para Todos 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Refuerza tus conocimientos en Octavo Grado y prepárate para los desafíos de la secundaria."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-8.png?raw=true" alt="Saber Para Todos 8"><div class="item-info"><h3>Saber Para Todos 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Material de estudio integral para Noveno Grado, un puente hacia la educación media."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-9.png?raw=true" alt="Saber Para Todos 9"><div class="item-info"><h3>Saber Para Todos 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Consolida tus competencias en Décimo Grado con este libro de preparación avanzada."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-10.png?raw=true" alt="Saber Para Todos 10"><div class="item-info"><h3>Saber Para Todos 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber-para-todos" data-descripcion="Libro de competencias para Undécimo Grado, reforzando saberes para los retos universitarios y profesionales."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/spt-11.png?raw=true" alt="Saber Para Todos 11"><div class="item-info"><h3>Saber Para Todos 11</h3></div></div>
+    </section>
+  </div>
+
+  <div id="vista-evaluaciones" class="vista">
+    <h2 class="titulo-principal"></h2>
+    <nav class="navegacion-subcategorias"></nav>
+    <h3 class="titulo-subcategoria"></h3>
+    <section id="estanteria-evaluaciones" class="estanteria">
+        <!-- Misión Alfa -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 1."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa1.jpg?raw=true" alt="Misión Alfa 1"><div class="item-info"><h3>Misión Alfa 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 2."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa2.jpg?raw=true" alt="Misión Alfa 2"><div class="item-info"><h3>Misión Alfa 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 3."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa3.jpg?raw=true" alt="Misión Alfa 3"><div class="item-info"><h3>Misión Alfa 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 4."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa4.jpg?raw=true" alt="Misión Alfa 4"><div class="item-info"><h3>Misión Alfa 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 5."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa5.jpg?raw=true" alt="Misión Alfa 5"><div class="item-info"><h3>Misión Alfa 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 6."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa6.jpg?raw=true" alt="Misión Alfa 6"><div class="item-info"><h3>Misión Alfa 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 7."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa7.jpg?raw=true" alt="Misión Alfa 7"><div class="item-info"><h3>Misión Alfa 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 8."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa8.jpg?raw=true" alt="Misión Alfa 8"><div class="item-info"><h3>Misión Alfa 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 9."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa9.jpg?raw=true" alt="Misión Alfa 9"><div class="item-info"><h3>Misión Alfa 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa10.jpg?raw=true" alt="Misión Alfa 10"><div class="item-info"><h3>Misión Alfa 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-alfa" data-descripcion="Evaluación diagnóstica Misión Alfa para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionalfa11.jpg?raw=true" alt="Misión Alfa 11"><div class="item-info"><h3>Misión Alfa 11</h3></div></div>
+        <!-- Misión Beta -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 1."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta1.jpg?raw=true" alt="Misión Beta 1"><div class="item-info"><h3>Misión Beta 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 2."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta2.jpg?raw=true" alt="Misión Beta 2"><div class="item-info"><h3>Misión Beta 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 3."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta3.jpg?raw=true" alt="Misión Beta 3"><div class="item-info"><h3>Misión Beta 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 4."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta4.jpg?raw=true" alt="Misión Beta 4"><div class="item-info"><h3>Misión Beta 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 5."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta5.jpg?raw=true" alt="Misión Beta 5"><div class="item-info"><h3>Misión Beta 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 6."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta6.jpg?raw=true" alt="Misión Beta 6"><div class="item-info"><h3>Misión Beta 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 7."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta7.jpg?raw=true" alt="Misión Beta 7"><div class="item-info"><h3>Misión Beta 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 8."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta8.jpg?raw=true" alt="Misión Beta 8"><div class="item-info"><h3>Misión Beta 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 9."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta9.jpg?raw=true" alt="Misión Beta 9"><div class="item-info"><h3>Misión Beta 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta10.jpg?raw=true" alt="Misión Beta 10"><div class="item-info"><h3>Misión Beta 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-beta" data-descripcion="Evaluación de seguimiento Misión Beta para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misionbeta11.jpg?raw=true" alt="Misión Beta 11"><div class="item-info"><h3>Misión Beta 11</h3></div></div>
+        <!-- Misión Gamma -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 1."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma1.jpg?raw=true" alt="Misión Gamma 1"><div class="item-info"><h3>Misión Gamma 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 2."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma2.jpg?raw=true" alt="Misión Gamma 2"><div class="item-info"><h3>Misión Gamma 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 3."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma3.jpg?raw=true" alt="Misión Gamma 3"><div class="item-info"><h3>Misión Gamma 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 4."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma4.jpg?raw=true" alt="Misión Gamma 4"><div class="item-info"><h3>Misión Gamma 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 5."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma5.jpg?raw=true" alt="Misión Gamma 5"><div class="item-info"><h3>Misión Gamma 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 6."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma6.jpg?raw=true" alt="Misión Gamma 6"><div class="item-info"><h3>Misión Gamma 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 7."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma7.jpg?raw=true" alt="Misión Gamma 7"><div class="item-info"><h3>Misión Gamma 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 8."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma8.jpg?raw=true" alt="Misión Gamma 8"><div class="item-info"><h3>Misión Gamma 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 9."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma9.jpg?raw=true" alt="Misión Gamma 9"><div class="item-info"><h3>Misión Gamma 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma10.jpg?raw=true" alt="Misión Gamma 10"><div class="item-info"><h3>Misión Gamma 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="mision-gamma" data-descripcion="Evaluación final Misión Gamma para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Misiongamma11.jpg?raw=true" alt="Misión Gamma 11"><div class="item-info"><h3>Misión Gamma 11</h3></div></div>
+        <!-- Saber Check -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 1."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck1.jpg?raw=true" alt="Saber Check 1"><div class="item-info"><h3>Saber Check 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 2."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck2.jpg?raw=true" alt="Saber Check 2"><div class="item-info"><h3>Saber Check 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 3."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck3.jpg?raw=true" alt="Saber Check 3"><div class="item-info"><h3>Saber Check 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 4."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck4.jpg?raw=true" alt="Saber Check 4"><div class="item-info"><h3>Saber Check 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 5."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck5.jpg?raw=true" alt="Saber Check 5"><div class="item-info"><h3>Saber Check 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 6."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck6.jpg?raw=true" alt="Saber Check 6"><div class="item-info"><h3>Saber Check 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 7."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck7.jpg?raw=true" alt="Saber Check 7"><div class="item-info"><h3>Saber Check 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 8."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck8.jpg?raw=true" alt="Saber Check 8"><div class="item-info"><h3>Saber Check 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 9."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck9.jpg?raw=true" alt="Saber Check 9"><div class="item-info"><h3>Saber Check 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck10.jpg?raw=true" alt="Saber Check 10"><div class="item-info"><h3>Saber Check 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="saber-check" data-descripcion="Prueba de competencias Saber Check para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sabercheck11.jpg?raw=true" alt="Saber Check 11"><div class="item-info"><h3>Saber Check 11</h3></div></div>
+        <!-- Alfa Plus -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 1."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_01.jpg" alt="Alfa Plus 1"><div class="item-info"><h3>Alfa Plus 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 2."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_02.jpg" alt="Alfa Plus 2"><div class="item-info"><h3>Alfa Plus 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 3."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_03.jpg" alt="Alfa Plus 3"><div class="item-info"><h3>Alfa Plus 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 4."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_04.jpg" alt="Alfa Plus 4"><div class="item-info"><h3>Alfa Plus 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 5."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_05.jpg" alt="Alfa Plus 5"><div class="item-info"><h3>Alfa Plus 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 6."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_06.jpg" alt="Alfa Plus 6"><div class="item-info"><h3>Alfa Plus 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 7."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_07.jpg" alt="Alfa Plus 7"><div class="item-info"><h3>Alfa Plus 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 8."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_08.jpg" alt="Alfa Plus 8"><div class="item-info"><h3>Alfa Plus 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 9."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_09.jpg" alt="Alfa Plus 9"><div class="item-info"><h3>Alfa Plus 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_10.jpg" alt="Alfa Plus 10"><div class="item-info"><h3>Alfa Plus 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="alfa-plus" data-descripcion="Prueba avanzada Alfa Plus para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/alfa_plus/alfa_11.jpg" alt="Alfa Plus 11"><div class="item-info"><h3>Alfa Plus 11</h3></div></div>
+        <!-- Beta Plus -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 1."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_01.jpg" alt="Beta Plus 1"><div class="item-info"><h3>Beta Plus 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 2."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_02.jpg" alt="Beta Plus 2"><div class="item-info"><h3>Beta Plus 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 3."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_03.jpg" alt="Beta Plus 3"><div class="item-info"><h3>Beta Plus 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 4."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_04.jpg" alt="Beta Plus 4"><div class="item-info"><h3>Beta Plus 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 5."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_05.jpg" alt="Beta Plus 5"><div class="item-info"><h3>Beta Plus 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 6."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_06.jpg" alt="Beta Plus 6"><div class="item-info"><h3>Beta Plus 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 7."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_07.jpg" alt="Beta Plus 7"><div class="item-info"><h3>Beta Plus 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 8."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_08.jpg" alt="Beta Plus 8"><div class="item-info"><h3>Beta Plus 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 9."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_09.jpg" alt="Beta Plus 9"><div class="item-info"><h3>Beta Plus 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_10.jpg" alt="Beta Plus 10"><div class="item-info"><h3>Beta Plus 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="beta-plus" data-descripcion="Prueba avanzada Beta Plus para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/beta_plus/beta_11.jpg" alt="Beta Plus 11"><div class="item-info"><h3>Beta Plus 11</h3></div></div>
+        <!-- Gamma Plus -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 1."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_01.jpg" alt="Gamma Plus 1"><div class="item-info"><h3>Gamma Plus 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 2."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_02.jpg" alt="Gamma Plus 2"><div class="item-info"><h3>Gamma Plus 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 3."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_03.jpg" alt="Gamma Plus 3"><div class="item-info"><h3>Gamma Plus 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 4."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_04.jpg" alt="Gamma Plus 4"><div class="item-info"><h3>Gamma Plus 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 5."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_05.jpg" alt="Gamma Plus 5"><div class="item-info"><h3>Gamma Plus 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 6."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_06.jpg" alt="Gamma Plus 6"><div class="item-info"><h3>Gamma Plus 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 7."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_07.jpg" alt="Gamma Plus 7"><div class="item-info"><h3>Gamma Plus 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 8."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_08.jpg" alt="Gamma Plus 8"><div class="item-info"><h3>Gamma Plus 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 9."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_09.jpg" alt="Gamma Plus 9"><div class="item-info"><h3>Gamma Plus 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_10.jpg" alt="Gamma Plus 10"><div class="item-info"><h3>Gamma Plus 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="gamma-plus" data-descripcion="Prueba avanzada Gamma Plus para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/gamma_plus/gamma_11.jpg" alt="Gamma Plus 11"><div class="item-info"><h3>Gamma Plus 11</h3></div></div>
+        <!-- Delta Plus -->
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 1."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_01.jpg" alt="Delta Plus 1"><div class="item-info"><h3>Delta Plus 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 2."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_02.jpg" alt="Delta Plus 2"><div class="item-info"><h3>Delta Plus 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 3."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_03.jpg" alt="Delta Plus 3"><div class="item-info"><h3>Delta Plus 3</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 4."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_04.jpg" alt="Delta Plus 4"><div class="item-info"><h3>Delta Plus 4</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 5."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_05.jpg" alt="Delta Plus 5"><div class="item-info"><h3>Delta Plus 5</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 6."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_06.jpg" alt="Delta Plus 6"><div class="item-info"><h3>Delta Plus 6</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 7."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_07.jpg" alt="Delta Plus 7"><div class="item-info"><h3>Delta Plus 7</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 8."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_08.jpg" alt="Delta Plus 8"><div class="item-info"><h3>Delta Plus 8</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 9."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_09.jpg" alt="Delta Plus 9"><div class="item-info"><h3>Delta Plus 9</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_10.jpg" alt="Delta Plus 10"><div class="item-info"><h3>Delta Plus 10</h3></div></div>
+        <div class="item-catalogo" data-categoria="periodicas" data-subcategoria="delta-plus" data-descripcion="Prueba avanzada Delta Plus para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/delta_plus/delta_11.jpg" alt="Delta Plus 11"><div class="item-info"><h3>Delta Plus 11</h3></div></div>
+        
+                <!-- Evaluaciones Saber -->
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="master-elite" data-descripcion="Evaluación de alto rendimiento Master Élite."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/MastereliteS1.jpg?raw=true" alt="Master Élite Sesión 1"><div class="item-info"><h3>Master Élite Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="master-elite" data-descripcion="Evaluación de alto rendimiento Master Élite."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/MastereliteS2.jpg?raw=true" alt="Master Élite Sesión 2"><div class="item-info"><h3>Master Élite Sesión 2</h3></div></div>
+        
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="kappa" data-descripcion="Prueba Kappa para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/kappa/kappa_10_s1.jpg" alt="Kappa 10 Sesión 1"><div class="item-info"><h3>Kappa 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="kappa" data-descripcion="Prueba Kappa para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/kappa/kappa_10_s2.jpg" alt="Kappa 10 Sesión 2"><div class="item-info"><h3>Kappa 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="kappa" data-descripcion="Prueba Kappa para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/kappa/kappa_11_s1.jpg" alt="Kappa 11 Sesión 1"><div class="item-info"><h3>Kappa 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="kappa" data-descripcion="Prueba Kappa para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/kappa/kappa_11_s2.jpg" alt="Kappa 11 Sesión 2"><div class="item-info"><h3>Kappa 11 Sesión 2</h3></div></div>
+        
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="kappa-premium" data-descripcion="Versión premium de la prueba Kappa para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Kappapremium1.jpg?raw=true" alt="Kappa Premium 11"><div class="item-info"><h3>Kappa Premium 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="kappa-premium" data-descripcion="Versión premium de la prueba Kappa para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Kappapremium2.jpg?raw=true" alt="Kappa Premium 11"><div class="item-info"><h3>Kappa Premium 11 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="omega" data-descripcion="Prueba Omega para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/omega/omega_10_s1.jpg" alt="Omega 10 Sesión 1"><div class="item-info"><h3>Omega 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="omega" data-descripcion="Prueba Omega para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/omega/omega_10_s2.jpg" alt="Omega 10 Sesión 2"><div class="item-info"><h3>Omega 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="omega" data-descripcion="Prueba Omega para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/omega/omega_11_s1.jpg" alt="Omega 11 Sesión 1"><div class="item-info"><h3>Omega 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="omega" data-descripcion="Prueba Omega para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/omega/omega_11_s2.jpg" alt="Omega 11 Sesión 2"><div class="item-info"><h3>Omega 11 Sesión 2</h3></div></div>
+        
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="lambda" data-descripcion="Prueba Lambda para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/lambda/lambda_10_s1.jpg" alt="Lambda 10 Sesión 1"><div class="item-info"><h3>Lambda 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="lambda" data-descripcion="Prueba Lambda para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/lambda/lambda_10_s2.jpg" alt="Lambda 10 Sesión 2"><div class="item-info"><h3>Lambda 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="lambda" data-descripcion="Prueba Lambda para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/omega/omega_11_s1.jpg" alt="Lambda 11 Sesión 1"><div class="item-info"><h3>Lambda 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="lambda" data-descripcion="Prueba Lambda para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/omega/omega_11_s2.jpg" alt="Lambda 11 Sesión 2"><div class="item-info"><h3>Lambda 11 Sesión 2</h3></div></div>
+        
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="epsilon" data-descripcion="Prueba Epsilon para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Epsilon10s1.jpg?raw=true" alt="Epsilon 10 Sesión 1"><div class="item-info"><h3>Epsilon 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="epsilon" data-descripcion="Prueba Epsilon para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Epsilon10s2.jpg?raw=true" alt="Epsilon 10 Sesión 2"><div class="item-info"><h3>Epsilon 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="epsilon" data-descripcion="Prueba Epsilon para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Epsilon11s1.jpg?raw=true" alt="Epsilon 11 Sesión 1"><div class="item-info"><h3>Epsilon 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="epsilon" data-descripcion="Prueba Epsilon para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Epsilon11s2.jpg?raw=true" alt="Epsilon 11 Sesión 2"><div class="item-info"><h3>Epsilon 11 Sesión 2</h3></div></div>
+
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="dzeta" data-descripcion="Prueba Dzeta para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Dzeta10s1.jpg?raw=true" alt="Dzeta 10 Sesión 1"><div class="item-info"><h3>Dzeta 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="dzeta" data-descripcion="Prueba Dzeta para Grado 10."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Dzeta10s2.jpg?raw=true" alt="Dzeta 10 Sesión 2"><div class="item-info"><h3>Dzeta 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="dzeta" data-descripcion="Prueba Dzeta para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Dzeta11s1.jpg?raw=true" alt="Dzeta 11 Sesión 1"><div class="item-info"><h3>Dzeta 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="dzeta" data-descripcion="Prueba Dzeta para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Dzeta11s2.jpg?raw=true" alt="Dzeta 11 Sesión 2"><div class="item-info"><h3>Dzeta 11 Sesión 2</h3></div></div>
+        
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="sigma" data-descripcion="Prueba Sigma para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/sigma/sigma_10_s1.jpg" alt="Sigma 10 Sesión 1"><div class="item-info"><h3>Sigma 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="sigma" data-descripcion="Prueba Sigma para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/sigma/sigma_10_s2.jpg" alt="Sigma 10 Sesión 2"><div class="item-info"><h3>Sigma 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="sigma" data-descripcion="Prueba Sigma para Grado 11."><img class="item-portada" src="https://github.com/Soportegec/repositorio-imagenes/blob/Carrusel/Sigma11s1.jpg?raw=true" alt="Sigma 11 Sesión 1"><div class="item-info"><h3>Sigma 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="sigma" data-descripcion="Prueba Sigma para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/sigma/sigma_11_s2.jpg" alt="Sigma 11 Sesión 2"><div class="item-info"><h3>Sigma 11 Sesión 2</h3></div></div>
+        
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="pi" data-descripcion="Prueba PI para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/pi/pi_10_s1.jpg" alt="PI 10 Sesión 1"><div class="item-info"><h3>PI 10 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="pi" data-descripcion="Prueba PI para Grado 10."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/pi/pi_10_s2.jpg" alt="PI 10 Sesión 2"><div class="item-info"><h3>PI 10 Sesión 2</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="pi" data-descripcion="Prueba PI para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/pi/pi_11_s1.jpg" alt="PI 11 Sesión 1"><div class="item-info"><h3>PI 11 Sesión 1</h3></div></div>
+        <div class="item-catalogo" data-categoria="saber" data-subcategoria="pi" data-descripcion="Prueba PI para Grado 11."><img class="item-portada" src="https://grupoeducatecolombia.com/assets/images/caratulas/tipo_saber/pi/pi_11_s2.jpg" alt="PI 11 Sesión 2"><div class="item-info"><h3>PI 11 Sesión 2</h3></div></div>
+             
+  </div>
+
+  <div class="modal-overlay" id="modal-vista-rapida">
+    <div class="modal-contenido">
+      <span class="modal-cerrar" id="modal-cerrar-btn">×</span>
+      <img src="" alt="Vista ampliada del item" id="modal-img">
+      <div class="modal-texto">
+        <h2 id="modal-titulo"></h2>
+        <p id="modal-descripcion"></p>
+        <a href="https://grupoeducatecolombia.com/contactenos" target="_blank" class="btn-modal">Contáctanos</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const subcategorias = {
+            periodicas: {
+                nombre: "Evaluaciones Periódicas",
+                filtros: { 'mision-alfa': "Misión Alfa", 'mision-beta': "Misión Beta", 'mision-gamma': "Misión Gamma", 'saber-check': "Saber Check", 'alfa-plus': "Alfa Plus", 'beta-plus': "Beta Plus", 'gamma-plus': "Gamma Plus", 'delta-plus': "Delta Plus" }
+            },
+            saber: {
+                nombre: "Evaluaciones Saber",
+                filtros: { 'master-elite': "Master Élite", 'kappa': "Kappa", 'kappa-premium': "Kappa Premium", 'omega': "Omega", 'lambda': "Lambda", 'epsilon': "Epsilon", 'dzeta': "Dzeta", 'sigma': "Sigma", 'pi': "PI" }
+            }
+        };
+
+        const botonesPrincipales = document.querySelectorAll('.btn-categoria');
+        const vistas = document.querySelectorAll('.vista');
+        const vistaLibros = document.getElementById('vista-libros');
+        const tituloLibros = vistaLibros.querySelector('.titulo-principal');
+        const todosLosLibros = vistaLibros.querySelectorAll('.item-catalogo');
+        const vistaEvaluaciones = document.getElementById('vista-evaluaciones');
+        const tituloEvaluaciones = vistaEvaluaciones.querySelector('.titulo-principal');
+        const subNavEvaluaciones = vistaEvaluaciones.querySelector('.navegacion-subcategorias');
+        const tituloSubCategoria = vistaEvaluaciones.querySelector('.titulo-subcategoria');
+        const todasLasEvaluaciones = vistaEvaluaciones.querySelectorAll('.item-catalogo');
+        const modalOverlay = document.getElementById('modal-vista-rapida');
+        const modalCerrarBtn = document.getElementById('modal-cerrar-btn');
+        const modalImg = document.getElementById('modal-img');
+        const modalTitulo = document.getElementById('modal-titulo');
+        const modalDescripcion = document.getElementById('modal-descripcion');
+
+        let isAnimating = false;
+
+        function animarItems(itemsAFiltrar, filtro, atributo) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const itemsParaOcultar = Array.from(itemsAFiltrar).filter(item => item.classList.contains('visible'));
+            
+            itemsParaOcultar.forEach(item => {
+                item.classList.add('saliendo');
+                item.classList.remove('visible');
+            });
+            
+            setTimeout(() => {
+                itemsParaOcultar.forEach(item => item.classList.add('oculto'));
+                
+                const itemsParaMostrar = Array.from(itemsAFiltrar).filter(item => item.dataset[atributo] === filtro);
+                
+                if (itemsParaMostrar.length === 0) {
+                    isAnimating = false;
+                    return;
+                }
+
+                itemsParaMostrar.forEach((item, index) => {
+                    const img = item.querySelector('.item-portada');
+                    if (img && img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+
+                    item.classList.remove('oculto', 'saliendo');
+                    setTimeout(() => {
+                        item.style.transitionDelay = `${index * 60}ms`;
+                        item.classList.add('visible');
+                    }, 20);
+                });
+                
+                setTimeout(() => {
+                    isAnimating = false;
+                    itemsAFiltrar.forEach(item => item.style.transitionDelay = '0ms');
+                }, 60 * itemsParaMostrar.length + 500);
+
+            }, 200);
+        }
+
+        botonesPrincipales.forEach(boton => {
+            boton.addEventListener('click', () => {
+                if (boton.classList.contains('active')) return;
+                
+                botonesPrincipales.forEach(b => b.classList.remove('active'));
+                boton.classList.add('active');
+
+                const vistaId = boton.dataset.vista;
+                const categoriaInicial = boton.dataset.categoriaInicial;
+
+                vistas.forEach(vista => {
+                    if (vista.id === `vista-${vistaId}`) {
+                        vista.classList.add('activa');
+                        if (vistaId === 'libros') {
+                            tituloLibros.textContent = boton.textContent;
+                            animarItems(todosLosLibros, categoriaInicial, 'categoria');
+                        } else {
+                            poblarSubNav(categoriaInicial);
+                        }
+                    } else {
+                        vista.classList.remove('activa');
+                    }
+                });
+            });
+        });
+
+        function poblarSubNav(categoriaEval) {
+            const data = subcategorias[categoriaEval];
+            tituloEvaluaciones.textContent = data.nombre;
+            subNavEvaluaciones.innerHTML = '';
+            
+            let filaActual = null;
+            const BOTONES_POR_FILA = 10;
+
+            Object.entries(data.filtros).forEach(([key, value], index) => {
+                if (index % BOTONES_POR_FILA === 0) {
+                    filaActual = document.createElement('div');
+                    filaActual.className = 'fila-de-botones';
+                    subNavEvaluaciones.appendChild(filaActual);
+                }
+
+                const boton = document.createElement('button');
+                boton.className = 'btn-subcategoria';
+                boton.dataset.subcategoria = key;
+                boton.textContent = value;
+                if (index === 0) boton.classList.add('active');
+                
+                filaActual.appendChild(boton);
+            });
+            
+            const primerFiltro = Object.keys(data.filtros)[0];
+            tituloSubCategoria.textContent = data.filtros[primerFiltro];
+            animarItems(todasLasEvaluaciones, primerFiltro, 'subcategoria');
+            
+            subNavEvaluaciones.querySelectorAll('.btn-subcategoria').forEach(subBtn => {
+                subBtn.addEventListener('click', () => {
+                    if (subBtn.classList.contains('active')) return;
+                    subNavEvaluaciones.querySelectorAll('.btn-subcategoria').forEach(b => b.classList.remove('active'));
+                    subBtn.classList.add('active');
+                    tituloSubCategoria.textContent = subBtn.textContent;
+                    animarItems(todasLasEvaluaciones, subBtn.dataset.subcategoria, 'subcategoria');
+                });
+            });
+        }
+        
+        const categoriaInicialLibros = document.querySelector('.btn-categoria.active').dataset.categoriaInicial;
+        todosLosLibros.forEach((libro, index) => {
+            if (libro.dataset.categoria === categoriaInicialLibros) {
+                 setTimeout(() => {
+                    libro.style.transitionDelay = `${index * 60}ms`;
+                    libro.classList.add('visible');
+                }, 200);
+            } else {
+                libro.classList.add('oculto');
+            }
+        });
+        todasLasEvaluaciones.forEach(eval => eval.classList.add('oculto'));
+        
+        function abrirModal(item) {
+            modalImg.src = item.querySelector('.item-portada').src;
+            modalTitulo.textContent = item.querySelector('h3').textContent;
+            modalDescripcion.textContent = item.dataset.descripcion;
+            document.body.classList.add('modal-abierto');
+            modalOverlay.classList.add('activo');
+        }
+
+        function cerrarModal() {
+            document.body.classList.remove('modal-abierto');
+            modalOverlay.classList.remove('activo');
+        }
+        
+        document.querySelectorAll('.item-catalogo').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.currentTarget.classList.contains('visible')) {
+                    abrirModal(e.currentTarget);
+                }
+            });
+        });
+
+        modalCerrarBtn.addEventListener('click', cerrarModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) cerrarModal();
+        });
+    });
+  </script>
+
+</body>
+</html>
